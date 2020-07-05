@@ -1,0 +1,28 @@
+version: "3.5"
+
+services:
+  cardano-node:
+    image: inputoutput/cardano-node
+    volumes:
+      - "./data/node:/data"
+      - "./data/ipc:/ipc"
+      - "./data/config:/config"
+    restart: on-failure
+    # https://github.com/input-output-hk/cardano-node#network-configuration-genesis-and-topology-files
+    command: "run --database-path /data --topology /config/mainnet-topology.json --config /config/mainnet-config.json --socket-path /ipc/node.socket"
+
+  cardano-wallet:
+    image: inputoutput/cardano-wallet
+    volumes:
+      - "./data/wallet:/wallet-db"
+      - "./data/ipc:/ipc"
+      - "./data/config:/config"
+    ports:
+      - 8090:8090
+    entrypoint: []
+    command: bash -c "$$CMD --mainnet"
+    environment:
+      CMD: "cardano-wallet-byron serve --node-socket /ipc/node.socket --database /wallet-db --listen-address 0.0.0.0"
+    restart: on-failure
+    depends_on:
+      - cardano-node
